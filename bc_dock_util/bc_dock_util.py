@@ -420,7 +420,7 @@ def combine_data_for_verifying(data, random_key):
 
 
 # 将所有参数拼接成一个大的urlencode有序的字符串
-def combine_page_url_params(biz_map, version, app_id, amount, public_key, private_key):
+def combine_page_url_params(biz_map, version, app_id, public_key, private_key):
     random_key = get_aes_random_key()
     enc_random_key = encrypt_with_rsa(random_key, public_key)
     data_json = json.dumps(biz_map)
@@ -439,7 +439,6 @@ def combine_page_url_params(biz_map, version, app_id, amount, public_key, privat
     data_map[Constant.TIMESTAMP] = timestamp
     data_map[Constant.CHARSET] = Constant.CHARSET_UTF8
     data_map[Constant.FORMAT] = Constant.FORMAT_JSON
-    data_map[Constant.AMOUNT] = amount
 
     return urlencode_orderly(data_map)
 

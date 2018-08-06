@@ -231,14 +231,19 @@ class AESECB:
         self.hex_switch = hex_switch
 
         self.bs = 16  # block size
-        self.pad = lambda s: s + (self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs)
-        self.unpad = lambda s: s[0:-ord(s[-1])]
+        # 对字符串进行处理
+        # self.pad = lambda s: s + (self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs)
+        # self.unpad = lambda s: s[0:-ord(s[-1])]
+
+        # 对字节数据进行处理
+        self.pad = lambda s: s + bytes((self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs), 'utf-8')
+        self.unpad = lambda s: s[0:-s[-1]]
 
     # parameter data should be string type.
     def encrypt(self, data):
         generator = AES.new(self.key, self.mode)  # ECB模式无需向量iv
-        enc_bytes = bytes(self.pad(data), 'utf-8')
-        crypt = generator.encrypt(enc_bytes)
+        to_enc_bytes = self.pad(bytes(data, 'utf-8'))
+        crypt = generator.encrypt(to_enc_bytes)
 
         if self.hex_switch:
             result = binascii.b2a_hex(crypt)
@@ -262,7 +267,7 @@ class AESECB:
     def _decrypt_bytes(self, byte_data):
         generator = AES.new(self.key, self.mode)  # ECB模式无需向量iv
         meg = generator.decrypt(byte_data)
-        result = self.unpad(meg.decode('utf-8'))
+        result = self.unpad(meg).decode()
 
         return result
 
@@ -392,7 +397,7 @@ def combine_request_body(signature, enc_biz_content, enc_random_key, timestamp):
     item_map[ApiRequestFlag.sign_type] = Constant.RSA
     item_map[ApiRequestFlag.timestamp] = timestamp
 
-    return json.dumps(item_map)
+    return json.dumps(item_map, ensure_ascii=False)
 
 
 def combine_data_for_signing(enc_data, enc_random_key, timestamp):
@@ -423,7 +428,7 @@ def combine_data_for_verifying(data, random_key):
 def combine_page_url_params(biz_map, version, app_id, public_key, private_key):
     random_key = get_aes_random_key()
     enc_random_key = encrypt_with_rsa(random_key, public_key)
-    data_json = json.dumps(biz_map)
+    data_json = json.dumps(biz_map, ensure_ascii=False)
     enc_biz_content = encrypt_with_aes(data_json, random_key)
     timestamp = get_timestamp()
     to_sign_data = combine_data_for_signing(enc_biz_content, enc_random_key, timestamp)
@@ -446,7 +451,7 @@ def combine_page_url_params(biz_map, version, app_id, public_key, private_key):
 # 使用post请求调用接口
 def post_for_response(url, data_map, public_key, private_key):
     random_key = get_aes_random_key()
-    data_json = json.dumps(data_map)
+    data_json = json.dumps(data_map, ensure_ascii=False)
     enc_data = encrypt_with_aes(data_json, random_key)
     enc_random_key = encrypt_with_rsa(random_key, public_key)
     timestamp = get_timestamp()

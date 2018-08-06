@@ -279,7 +279,7 @@ def encrypt_with_aes_key_base64(data, aes_key, hex_switch=False):
 
 def decrypt_with_aes(enc_info, aes_key, hex_switch=False):
     aes = AESECB(aes_key, hex_switch)
-    return aes.decrypt(enc_info)
+    return aes.decrypt(base64.b64decode(enc_info))
 
 
 def decrypt_with_aes_key_base64(enc_info, aes_key, hex_switch=False):

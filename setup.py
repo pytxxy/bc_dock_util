@@ -7,7 +7,7 @@ with open('README.md', 'r', encoding='utf-8') as fh:
 
 setup(
     name='bc_dock_util',
-    version='0.0.7',
+    version='0.0.8',
     author='caifh',
     author_email='caifh@tianxiaxinyong.com',
     description='B client docking tianxiaxinyong service sdk util.',

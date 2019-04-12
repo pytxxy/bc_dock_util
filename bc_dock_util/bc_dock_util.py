@@ -1,4 +1,5 @@
 # -*- coding:UTF-8 -*-
+import sys
 import json
 import random
 import time
@@ -27,6 +28,13 @@ import subprocess
 # 执行操作(在windows上可以安装openssl win32版本，或者如果安装了git，可以在git bash环境中手动执行该命令)，其中pkcs8.pem为完整的包含了头尾的pkcs8格式私钥文件，
 # pkcs1.pem为输出的完整的包含了头尾的pkcs1格式私钥文件。更详细信息可参考网址：https://www.jianshu.com/p/08e41304edab
 # 该步操作当前已经集成到demo中了，但需要确保openssl已经正常安装并已经添加到系统路径PATH中，能够正常调用。
+
+
+def is_python3():
+    if (sys.version[0] == '3'):
+        return True
+    else:
+        return False
 
 
 class Constant:
@@ -195,15 +203,23 @@ def convert_pkcs8_to_pkcs1(pkcs8_key):
 
 # 公钥加密之后转换成base64编码
 def encrypt_with_rsa(message, public_pem):
-    if type(message) == str:
-        to_enc_data = bytes(message, 'utf-8')
+    if is_python3():
+        if type(message) == str:
+            to_enc_data = bytes(message, 'utf-8')
+        else:
+            to_enc_data = message
     else:
         to_enc_data = message
 
     rsakey = RSA.importKey(public_pem)
     cipher = Cipher_pkcs1_v1_5.new(rsakey)
     cipher_text = base64.b64encode(cipher.encrypt(to_enc_data))
-    return cipher_text.decode()
+    if is_python3():
+        result = cipher_text.decode()
+    else:
+        result = cipher_text
+
+    return result
 
 
 # 私钥解密base64编码的数据
@@ -213,13 +229,21 @@ def decrypt_with_rsa(cipher_text, private_pem):
     # 伪随机数生成器
     random_generator = Random.new().read
     text = cipher.decrypt(base64.b64decode(cipher_text), random_generator)
-    return text.decode()
+    if is_python3():
+        result = text.decode()
+    else:
+        result = text
+
+    return result
 
 
 class AESECB:
     def __init__(self, key, hex_switch=False):
-        if type(key) == str:
-            to_use_key = bytes(key, 'utf-8')
+        if is_python3():
+            if type(key) == str:
+                to_use_key = bytes(key, 'utf-8')
+            else:
+                to_use_key = key
         else:
             to_use_key = key
 
@@ -231,18 +255,24 @@ class AESECB:
         self.hex_switch = hex_switch
 
         self.bs = 16  # block size
-        # 对字符串进行处理
-        # self.pad = lambda s: s + (self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs)
-        # self.unpad = lambda s: s[0:-ord(s[-1])]
-
-        # 对字节数据进行处理
-        self.pad = lambda s: s + bytes((self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs), 'utf-8')
-        self.unpad = lambda s: s[0:-s[-1]]
+        if is_python3():
+            # 对字节数据进行处理
+            self.pad = lambda s: s + bytes((self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs), 'utf-8')
+            self.unpad = lambda s: s[0:-s[-1]]
+        else:
+            # 对字符串进行处理
+            self.pad = lambda s: s + (self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs)
+            self.unpad = lambda s: s[0:-ord(s[-1])]
 
     # parameter data should be string type.
     def encrypt(self, data):
         generator = AES.new(self.key, self.mode)  # ECB模式无需向量iv
-        to_enc_bytes = self.pad(bytes(data, 'utf-8'))
+        if is_python3():
+            src_data = bytes(data, 'utf-8')
+        else:
+            src_data = data
+
+        to_enc_bytes = self.pad(src_data)
         crypt = generator.encrypt(to_enc_bytes)
 
         if self.hex_switch:
@@ -256,8 +286,11 @@ class AESECB:
         if self.hex_switch:
             to_dec = binascii.a2b_hex(data)
         else:
-            if type(data) == str:
-                to_dec = bytes(data, 'utf-8')
+            if is_python3():
+                if type(data) == str:
+                    to_dec = bytes(data, 'utf-8')
+                else:
+                    to_dec = data
             else:
                 to_dec = data
 
@@ -267,19 +300,35 @@ class AESECB:
     def _decrypt_bytes(self, byte_data):
         generator = AES.new(self.key, self.mode)  # ECB模式无需向量iv
         meg = generator.decrypt(byte_data)
-        result = self.unpad(meg).decode()
+        mid_result = self.unpad(meg)
+        if is_python3():
+            result = mid_result.decode()
+        else:
+            result = mid_result
 
         return result
 
 
 def encrypt_with_aes(data, aes_key, hex_switch=False):
     aes = AESECB(aes_key, hex_switch)
-    return base64.b64encode(aes.encrypt(data)).decode()
+    mid_result = base64.b64encode(aes.encrypt(data))
+    if is_python3():
+        result = mid_result.decode()
+    else:
+        result = mid_result
+
+    return result
 
 
 def encrypt_with_aes_key_base64(data, aes_key, hex_switch=False):
     aes = AESECB(base64.b64decode(aes_key), hex_switch)
-    return base64.b64encode(aes.encrypt(data)).decode()
+    mid_result = base64.b64encode(aes.encrypt(data))
+    if is_python3():
+        result = mid_result.decode()
+    else:
+        result = mid_result
+
+    return result
 
 
 def decrypt_with_aes(enc_info, aes_key, hex_switch=False):
@@ -311,14 +360,18 @@ def urlencode_orderly(dict_data):
 
 
 def sign_with_sha256_rsa(data, key):
-    if type(data) == str:
-        data_bytes = bytes(data, 'utf-8')
+    if is_python3():
+        if type(data) == str:
+            data_bytes = bytes(data, 'utf-8')
+        else:
+            data_bytes = data
+
+        if type(key) == str:
+            key_bytes = bytes(key, 'utf-8')
+        else:
+            key_bytes = key
     else:
         data_bytes = data
-
-    if type(key) == str:
-        key_bytes = bytes(key, 'utf-8')
-    else:
         key_bytes = key
 
     signer = serialization.load_pem_private_key(
@@ -341,18 +394,28 @@ def sign_with_sha256_rsa(data, key):
 
 def sign_with_sha256_rsa_and_output_base64_str(data, key):
     signature = sign_with_sha256_rsa(data, key)
-    return base64.b64encode(signature).decode()
+    mid_result = base64.b64encode(signature)
+    if is_python3():
+        result = mid_result.decode()
+    else:
+        result = mid_result
+
+    return result
 
 
 def verify_with_sha256_rsa(signature, data, key):
-    if type(data) == str:
-        data_bytes = bytes(data, 'utf-8')
+    if is_python3():
+        if type(data) == str:
+            data_bytes = bytes(data, 'utf-8')
+        else:
+            data_bytes = data
+
+        if type(key) == str:
+            key_bytes = bytes(key, 'utf-8')
+        else:
+            key_bytes = key
     else:
         data_bytes = data
-
-    if type(key) == str:
-        key_bytes = bytes(key, 'utf-8')
-    else:
         key_bytes = key
 
     # 使用公钥对数据进行验签
@@ -460,6 +523,7 @@ def post_for_response(url, data_map, public_key, private_key):
     signature = sign_with_sha256_rsa_and_output_base64_str(to_sign_data, private_key)
     body = combine_request_body(signature, enc_data, enc_random_key, timestamp)
 
+    print(body)
     headers = {'Content-type': 'application/json'}
     response = requests.post(url, data=body, headers=headers)
     rtn_map = response.json()

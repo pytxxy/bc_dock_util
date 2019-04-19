@@ -523,7 +523,7 @@ def post_for_response(url, data_map, public_key, private_key):
     signature = sign_with_sha256_rsa_and_output_base64_str(to_sign_data, private_key)
     body = combine_request_body(signature, enc_data, enc_random_key, timestamp)
 
-    print(body)
+    # print(body)
     headers = {'Content-type': 'application/json'}
     response = requests.post(url, data=body, headers=headers)
     rtn_map = response.json()

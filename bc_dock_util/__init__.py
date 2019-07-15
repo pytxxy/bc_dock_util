@@ -1,3 +1,5 @@
+# -*- coding:UTF-8 -*-
+
 from bc_dock_util.bc_dock_util import *
 import bc_dock_util.bc_dock_util as bc_dock_util
 

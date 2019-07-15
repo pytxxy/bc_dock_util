@@ -1,13 +1,24 @@
 from setuptools import setup, find_packages
+import sys
 
 
-with open('README.md', 'r', encoding='utf-8') as fh:
-    long_description = fh.read()
+def is_python3():
+    if (sys.version[0] == '3'):
+        return True
+    else:
+        return False
+		
+if is_python3(): 
+    with open('README.md', 'r', encoding='utf-8') as fh:
+        long_description = fh.read()
+else:
+    with open('README.md', 'r') as fh:
+        long_description = fh.read()
 
 
 setup(
     name='bc_dock_util',
-    version='0.0.9b1.dev2',
+    version='0.1.0b1.dev1',
     author='caifh',
     author_email='caifh@tianxiaxinyong.com',
     description='B client docking tianxiaxinyong service sdk util.',

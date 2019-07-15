@@ -18,7 +18,7 @@ else:
 
 setup(
     name='bc_dock_util',
-    version='0.1.0b1.dev2',
+    version='0.1.0',
     author='caifh',
     author_email='caifh@tianxiaxinyong.com',
     description='B client docking tianxiaxinyong service sdk util.',

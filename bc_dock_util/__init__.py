@@ -11,9 +11,8 @@ def is_python3():
         
 if is_python3():
     import bc_dock_util.bc_dock_util as bc_dock_util
-
     __all__ = dir(bc_dock_util)
- else:
+else:
     from bc_dock_util import *
 
 name = 'bc_dock_util'

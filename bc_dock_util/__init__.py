@@ -1,10 +1,20 @@
 # -*- coding:UTF-8 -*-
 
-from bc_dock_util.bc_dock_util import *
-import bc_dock_util.bc_dock_util as bc_dock_util
+import sys
 
+def is_python3():
+    if (sys.version[0] == '3'):
+        return True
+    else:
+        return False
+        
+        
+if is_python3():
+    import bc_dock_util.bc_dock_util as bc_dock_util
 
-__all__ = dir(bc_dock_util)
+    __all__ = dir(bc_dock_util)
+ else:
+    from bc_dock_util import *
 
 name = 'bc_dock_util'
 
